@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Healthship - Health Assistant Bot</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f7f9fc; margin: 0; padding: 0; }
+        .chat-container { width: 400px; margin: 50px auto; background: white; border-radius: 10px; padding: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; }
+        .messages { height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+        .message { margin: 5px 0; }
+        .user { color: blue; }
+        .bot { color: green; }
+        input { width: 80%; padding: 8px; }
+        button { padding: 8px 12px; background: blue; color: white; border: none; cursor: pointer; }
+        button:hover { background: darkblue; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h2>💊 Healthship Bot</h2>
+        <div class="messages" id="messages"></div>
+        <input type="text" id="userInput" placeholder="Ask a health question..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            let input = document.getElementById("userInput");
+            let messagesDiv = document.getElementById("messages");
+            let userMessage = input.value.trim();
+            if (!userMessage) return;
+
+            // Display user message
+            messagesDiv.innerHTML += `<div class="message user"><b>You:</b> ${userMessage}</div>`;
+            input.value = "";
+
+            // Send to backend
+            let res = await fetch("http://127.0.0.1:8000/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ question: userMessage })
+            });
+            let data = await res.json();
+
+            // Display bot response
+            messagesDiv.innerHTML += `<div class="message bot"><b>Healthship:</b> ${data.answer}</div>`;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>
