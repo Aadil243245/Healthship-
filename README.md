@@ -39,7 +39,7 @@ A modern, AI-powered health assistant bot that provides friendly, humanized conv
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/Aadil243245/Healthship-.git
    cd Healthship
    ```
 
