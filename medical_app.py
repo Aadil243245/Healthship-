@@ -14,7 +14,7 @@ USE_FREE_AI = True
 
 # FREE OPTION 1: Ollama (Local AI - Completely Free!)
 OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "deepseek-v3.1:671b-cloud"  # Using available model
+OLLAMA_MODEL = "llama2"
 
 # FREE OPTION 2: Hugging Face Inference API (Free tier available)
 HUGGINGFACE_API_URL = "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium"
@@ -33,10 +33,10 @@ app.add_middleware(
 
 # Professional medical greetings (no emojis)
 MEDICAL_GREETINGS = [
-    "Welcome to HealthShip AI. I'm HealthShip, your AI medical assistant. Please describe your symptoms or health concerns, and I'll provide professional medical guidance.",
-    "Hello, I'm HealthShip, here to help with your health questions. Please tell me about your symptoms or medical concerns so I can provide appropriate guidance.",
-    "Good day. I'm HealthShip, your AI medical consultation assistant. Please describe your health issue or symptoms, and I'll offer professional medical advice.",
-    "Welcome to HealthShip AI medical consultation service. I'm HealthShip, ready to help with your health concerns. Please describe your symptoms or condition."
+    "Welcome to MedConsult. I'm your AI medical assistant. Please describe your symptoms or health concerns, and I'll provide professional medical guidance.",
+    "Hello, I'm here to help with your health questions. Please tell me about your symptoms or medical concerns so I can provide appropriate guidance.",
+    "Good day. I'm your medical consultation assistant. Please describe your health issue or symptoms, and I'll offer professional medical advice.",
+    "Welcome to our medical consultation service. I'm ready to help with your health concerns. Please describe your symptoms or condition."
 ]
 
 # Conversation memory
@@ -233,53 +233,25 @@ def format_medical_response(condition_info: Dict, user_query: str) -> str:
 def call_ollama_ai(prompt: str) -> str:
     """Call Ollama local AI (completely free!)"""
     try:
-        # Test if Ollama is running
-        test_response = requests.get("http://localhost:11434/api/tags", timeout=3)
+        test_response = requests.get("http://localhost:11434/api/tags", timeout=5)
         if test_response.status_code != 200:
-            print("Ollama not running or not accessible")
             return None
             
-        # Enhanced medical prompt for better responses
-        medical_prompt = f"""You are HealthShip, a professional medical AI assistant. You provide accurate, helpful medical information while being professional and empathetic.
+        medical_prompt = f"""You are a professional medical AI assistant. Provide accurate, helpful medical information while being professional and empathetic. Always recommend consulting healthcare professionals for serious conditions.
 
-IMPORTANT INSTRUCTIONS:
-- Give specific, actionable medical advice
-- Include symptoms, causes, treatments, and when to see a doctor
-- Be direct and helpful, not generic
-- Always recommend professional medical care for serious conditions
-- Keep responses comprehensive but concise
+Patient Query: {prompt}
 
-Patient Question: {prompt}
-
-Provide a detailed medical response:"""
+Please provide a comprehensive medical response including symptoms, possible causes, treatment options, and when to seek professional medical care."""
 
         payload = {
             "model": OLLAMA_MODEL,
             "prompt": medical_prompt,
-            "stream": False,
-            "options": {
-                "temperature": 0.7,
-                "top_p": 0.9,
-                "max_tokens": 500
-            }
+            "stream": False
         }
-        
-        print(f"Calling Ollama with model: {OLLAMA_MODEL}")
-        response = requests.post(OLLAMA_URL, json=payload, timeout=45)
-        
+        response = requests.post(OLLAMA_URL, json=payload, timeout=30)
         if response.status_code == 200:
             result = response.json().get("response", "").strip()
-            print(f"Ollama response length: {len(result)}")
-            return result if result and len(result) > 10 else None
-        else:
-            print(f"Ollama API error: {response.status_code}")
-            return None
-            
-    except requests.exceptions.Timeout:
-        print("Ollama request timed out")
-        return None
-    except requests.exceptions.ConnectionError:
-        print("Cannot connect to Ollama - is it running?")
+            return result if result else None
         return None
     except Exception as e:
         print(f"Ollama error: {e}")
@@ -308,58 +280,8 @@ def generate_professional_medical_response(query: str) -> str:
     """Generate professional medical responses based on symptoms and conditions"""
     query_lower = query.lower()
     
-    # Skin problems response
-    if any(word in query_lower for word in ["skin", "rash", "itch", "dermatitis", "eczema", "psoriasis", "acne", "spots"]):
-        return """**Medical Consultation: Skin Problems**
-
-**Symptom Assessment:**
-Skin problems can range from minor irritations to serious dermatological conditions requiring professional evaluation.
-
-**Common Skin Conditions:**
-• **Eczema/Dermatitis**: Red, itchy, inflamed patches
-• **Psoriasis**: Thick, scaly patches with silvery scales
-• **Acne**: Blackheads, whiteheads, pimples, cysts
-• **Contact Dermatitis**: Reaction to irritants or allergens
-• **Fungal Infections**: Ringworm, athlete's foot, yeast infections
-• **Bacterial Infections**: Impetigo, cellulitis
-
-**Immediate Care Recommendations:**
-• Keep affected area clean and dry
-• Avoid scratching or picking at the skin
-• Use gentle, fragrance-free moisturizers
-• Apply cool compresses for itching relief
-• Avoid known irritants or allergens
-• Wear loose, breathable clothing
-
-**Treatment Options:**
-• **Topical corticosteroids** for inflammation
-• **Antihistamines** for itching relief
-• **Antibiotics** if bacterial infection suspected
-• **Antifungal medications** for fungal conditions
-• **Moisturizing creams** for dry skin conditions
-
-**When to Seek Medical Care:**
-• Widespread rash covering large body areas
-• Signs of infection (pus, red streaking, fever)
-• Severe itching interfering with sleep
-• Skin changes that don't improve with basic care
-• New moles or changes in existing moles
-• Painful or bleeding skin lesions
-
-**Prevention Measures:**
-• Use gentle, hypoallergenic skin products
-• Moisturize regularly, especially after bathing
-• Protect skin from sun exposure
-• Avoid harsh chemicals and irritants
-• Maintain good hygiene practices
-
-**Specialist Referral:**
-Consider consulting a dermatologist for persistent, severe, or recurring skin problems.
-
-**Medical Disclaimer:** Skin conditions can vary greatly. For accurate diagnosis and treatment, please consult with a dermatologist or healthcare provider."""
-
     # Comprehensive medical response system
-    elif any(word in query_lower for word in ["stomach", "abdominal", "belly", "nausea", "vomiting"]):
+    if any(word in query_lower for word in ["stomach", "abdominal", "belly", "nausea", "vomiting"]):
         return """**Medical Consultation: Gastrointestinal Symptoms**
 
 **Symptoms Assessment:**
@@ -666,17 +588,17 @@ Please describe your specific health concern or symptoms, and I'll provide compr
 def get_ai_response(prompt: str) -> str:
     """Try different AI providers in order of preference"""
     
-    # Try Ollama first (local, completely free) - Enhanced for better responses
+    # Try Ollama first (local, completely free)
     if USE_FREE_AI:
         response = call_ollama_ai(prompt)
-        if response and len(response) > 20:  # Lowered threshold for better detection
-            return f"**HealthShip AI Response:**\n\n{response}"
+        if response and len(response) > 50:
+            return response
     
     # Try Hugging Face API (free tier)
     if USE_FREE_AI and HUGGINGFACE_TOKEN:
         response = call_huggingface_ai(prompt)
-        if response and len(response) > 20:
-            return f"**HealthShip AI Response:**\n\n{response}"
+        if response and len(response) > 50:
+            return response
     
     # Fallback to professional medical response system (always works, always free)
     return generate_professional_medical_response(prompt)
@@ -709,7 +631,7 @@ def test_ai():
     status["huggingface"] = bool(HUGGINGFACE_TOKEN)
     
     return {
-        "message": "HealthShip AI Medical Service Status",
+        "message": "Medical AI Service Status",
         "services": status,
         "medical_specialties": list(MEDICAL_SPECIALTIES.values()),
         "recommendation": "Professional medical database with AI enhancement" + (" + Ollama local AI" if status["ollama"] else "")
@@ -718,7 +640,6 @@ def test_ai():
 @app.post("/chat")
 def chat(query: UserQuery):
     try:
-        print(f"Received query: {query.question}")  # Debug logging
         context = get_or_create_context(query.session_id)
         user_message = query.question.lower().strip()
         
@@ -729,7 +650,7 @@ def chat(query: UserQuery):
             context.messages.append({"role": "assistant", "content": response_text})
             return {"answer": response_text}
         
-        # Check for specific medical conditions in database first
+        # Check for specific medical conditions in database
         condition_info = search_medical_condition(user_message)
         if condition_info:
             response_text = format_medical_response(condition_info, user_message)
@@ -737,30 +658,25 @@ def chat(query: UserQuery):
             context.messages.append({"role": "assistant", "content": response_text})
             return {"answer": response_text}
         
-        # Always try professional medical response first (more reliable)
-        response_text = generate_professional_medical_response(query.question)
-        
-        # Only try AI if we get a generic response
-        if "Medical Consultation Service" in response_text:
-            ai_response = get_ai_response(query.question)
-            if ai_response and "HealthShip AI Response" in ai_response:
-                response_text = ai_response
+        # Use AI response system (free alternatives + professional medical responses)
+        response_text = get_ai_response(query.question)
         
         # Store in conversation memory
         context.messages.append({"role": "user", "content": query.question})
         context.messages.append({"role": "assistant", "content": response_text})
         
-        print(f"Sending response length: {len(response_text)}")  # Debug logging
         return {"answer": response_text}
         
     except Exception as e:
         print(f"Error in medical consultation: {str(e)}")
-        import traceback
-        traceback.print_exc()  # Full error details
         
-        # Provide helpful error response
-        return {"answer": "I'm HealthShip, your medical assistant. I'm ready to help with your health questions. Please describe your symptoms or health concerns, and I'll provide professional medical guidance."}
+        error_responses = [
+            "I apologize for the technical difficulty. Please try rephrasing your medical question, and I'll provide professional guidance.",
+            "I'm experiencing a temporary issue. Please describe your symptoms again, and I'll offer comprehensive medical information.",
+            "Technical error encountered. Please restate your health concern, and I'll provide detailed medical consultation."
+        ]
+        return {"answer": random.choice(error_responses)}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)

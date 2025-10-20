@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthShip AI - Mobile Offline</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3a5f 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .status {
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .online {
+            background: #28a745;
+            color: white;
+        }
+
+        .offline {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #f8f9fa;
+            min-height: 400px;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .bot-message {
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 85%;
+            padding: 1rem;
+            border-radius: 20px;
+            word-wrap: break-word;
+            line-height: 1.4;
+            font-size: 0.95rem;
+        }
+
+        .user-bubble {
+            background: #2c5aa0;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-bubble {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .bot-avatar {
+            width: 35px;
+            height: 35px;
+            background: #28a745;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+            font-size: 1rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .quick-actions {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .quick-actions h4 {
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .quick-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .quick-button {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            padding: 0.8rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #666;
+            text-align: center;
+        }
+
+        .quick-button:hover, .quick-button:active {
+            background: #2c5aa0;
+            color: white;
+            border-color: #2c5aa0;
+            transform: scale(0.98);
+        }
+
+        .chat-input-container {
+            padding: 1rem;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+            background: #f8f9fa;
+        }
+
+        .chat-input:focus {
+            border-color: #2c5aa0;
+            background: white;
+        }
+
+        .send-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+        }
+
+        .send-button:hover, .send-button:active {
+            background: #218838;
+            transform: scale(0.95);
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 1rem;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            border-bottom-left-radius: 5px;
+            max-width: 80px;
+            margin-left: 40px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .message-bubble {
+                max-width: 90%;
+                font-size: 0.9rem;
+            }
+            
+            .quick-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .chat-input {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-heartbeat"></i> HealthShip AI</h1>
+        <p>Professional Medical Consultation</p>
+    </div>
+
+    <div class="status" id="connectionStatus">
+        <i class="fas fa-wifi"></i> Checking connection...
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                <div class="bot-avatar">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="message-bubble bot-bubble">
+                    Welcome to HealthShip AI! I'm HealthShip, your medical assistant. I can help with health questions even when offline. Describe your symptoms or health concerns.
+                </div>
+            </div>
+        </div>
+        
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+        
+        <div class="quick-actions">
+            <h4>Quick Medical Consultations:</h4>
+            <div class="quick-buttons">
+                <button class="quick-button" onclick="askQuestion('I have a severe headache and nausea')">
+                    <i class="fas fa-head-side-virus"></i><br>Headache
+                </button>
+                <button class="quick-button" onclick="askQuestion('I have stomach pain and feel sick')">
+                    <i class="fas fa-stomach"></i><br>Stomach Pain
+                </button>
+                <button class="quick-button" onclick="askQuestion('I have chest pain and shortness of breath')">
+                    <i class="fas fa-heartbeat"></i><br>Chest Pain
+                </button>
+                <button class="quick-button" onclick="askQuestion('I have skin problems and rash')">
+                    <i class="fas fa-hand-dots"></i><br>Skin Issues
+                </button>
+                <button class="quick-button" onclick="askQuestion('I have joint pain and stiffness')">
+                    <i class="fas fa-bone"></i><br>Joint Pain
+                </button>
+                <button class="quick-button" onclick="askQuestion('I have a persistent cough and fever')">
+                    <i class="fas fa-lungs"></i><br>Cough/Fever
+                </button>
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Describe your symptoms..." />
+            <button class="send-button" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = 'mobile_' + Math.random().toString(36).substr(2, 9);
+        let isOnline = false;
+        let serverUrl = '';
+        
+        // Try different server URLs
+        const serverUrls = [
+            'http://localhost:8000',
+            'http://127.0.0.1:8000',
+            'http://192.168.1.100:8000'
+        ];
+        
+        // Offline medical responses database
+        const offlineResponses = {
+            'headache': `**Medical Consultation: Headache**
+
+**Immediate Relief:**
+• Rest in a quiet, dark room
+• Apply cold compress to forehead
+• Stay hydrated - drink plenty of water
+• Gentle neck and temple massage
+• Deep breathing exercises
+
+**Pain Management:**
+• Over-the-counter pain relievers (acetaminophen, ibuprofen)
+• Avoid overuse of medications
+• Consider caffeine in moderation
+
+**When to Seek Emergency Care:**
+• Sudden, severe headache unlike any before
+• Headache with fever, stiff neck, or vision changes
+• Headache after head injury
+• Weakness or numbness with headache
+
+**Prevention:**
+• Regular sleep schedule (7-9 hours)
+• Stay hydrated throughout day
+• Manage stress effectively
+• Take breaks from screens
+
+**Medical Disclaimer:** For persistent or severe headaches, consult a healthcare provider.`,
+
+            'stomach': `**Medical Consultation: Stomach Problems**
+
+**Immediate Care:**
+• Rest and avoid solid foods temporarily
+• Stay hydrated with clear fluids
+• Try ginger tea for nausea relief
+• Apply gentle heat to abdomen
+• Eat bland foods when ready (rice, toast, bananas)
+
+**Dietary Management:**
+• Small, frequent meals
+• Avoid dairy, spicy, or fatty foods initially
+• Chew food thoroughly
+• Avoid alcohol and caffeine
+
+**Seek Medical Care If:**
+• Severe, persistent abdominal pain
+• High fever (over 101°F)
+• Vomiting blood or coffee-ground material
+• Signs of dehydration
+• Black, tarry stools
+
+**Recovery Tips:**
+• Gradual return to normal diet
+• Probiotics may help restore gut health
+• Avoid NSAIDs on empty stomach
+
+**Medical Disclaimer:** Persistent stomach problems require professional evaluation.`,
+
+            'chest': `**Medical Consultation: Chest Pain**
+
+**⚠️ IMPORTANT:** Chest pain can be serious. If severe, call emergency services immediately.
+
+**Immediate Actions:**
+• Sit upright and try to remain calm
+• Loosen tight clothing
+• If prescribed, take nitroglycerin as directed
+• Chew aspirin if not allergic (unless contraindicated)
+
+**Emergency Signs (CALL 911):**
+• Crushing, squeezing chest pain
+• Pain radiating to arm, jaw, neck, or back
+• Shortness of breath with chest pain
+• Sweating, nausea with chest pain
+• Irregular heartbeat
+
+**Non-Emergency Causes:**
+• Muscle strain or inflammation
+• Acid reflux (heartburn)
+• Anxiety or panic attacks
+• Respiratory conditions
+
+**When in Doubt:** Always seek immediate medical evaluation for chest pain.
+
+**Medical Disclaimer:** This is not a substitute for emergency medical care.`,
+
+            'skin': `**Medical Consultation: Skin Problems**
+
+**Immediate Care:**
+• Keep affected area clean and dry
+• Avoid scratching or picking
+• Use gentle, fragrance-free moisturizers
+• Apply cool compresses for itching
+• Wear loose, breathable clothing
+
+**Common Conditions:**
+• **Eczema:** Red, itchy, inflamed patches
+• **Contact Dermatitis:** Reaction to irritants
+• **Fungal Infections:** Ringworm, athlete's foot
+• **Bacterial Infections:** Impetigo, cellulitis
+
+**Treatment Options:**
+• Topical corticosteroids for inflammation
+• Antihistamines for itching
+• Antibiotics if infection suspected
+• Moisturizing creams for dry skin
+
+**Seek Medical Care If:**
+• Widespread rash covering large areas
+• Signs of infection (pus, red streaking, fever)
+• Severe itching interfering with sleep
+• New or changing moles
+
+**Medical Disclaimer:** Skin conditions vary greatly. Consult a dermatologist for accurate diagnosis.`,
+
+            'joint': `**Medical Consultation: Joint Pain**
+
+**Immediate Relief:**
+• Rest affected joints
+• Apply ice for acute injuries (first 24-48 hours)
+• Apply heat for chronic stiffness
+• Gentle range-of-motion exercises
+• Over-the-counter anti-inflammatory medications
+
+**Activity Modification:**
+• Avoid high-impact activities during symptoms
+• Use supportive devices if needed
+• Maintain gentle movement to prevent stiffness
+• Balance activity with rest
+
+**Common Causes:**
+• **Osteoarthritis:** Wear-and-tear arthritis
+• **Rheumatoid Arthritis:** Autoimmune condition
+• **Gout:** Crystal arthritis
+• **Bursitis:** Inflammation of joint cushions
+
+**Seek Medical Care If:**
+• Severe joint pain limiting daily activities
+• Joint swelling, warmth, or redness
+• Morning stiffness lasting more than 1 hour
+• Fever with joint pain
+
+**Medical Disclaimer:** Persistent joint symptoms require professional evaluation.`,
+
+            'cough': `**Medical Consultation: Cough and Fever**
+
+**Immediate Care:**
+• Rest and stay well hydrated
+• Use humidifier or breathe steam
+• Honey for throat soothing (adults only)
+• Elevate head while sleeping
+• Avoid irritants (smoke, strong odors)
+
+**Fever Management:**
+• Take fever reducers as directed
+• Use cool, damp cloths on forehead
+• Wear light, breathable clothing
+• Monitor temperature regularly
+
+**Seek Medical Care If:**
+• Cough producing blood
+• High fever (over 103°F)
+• Severe difficulty breathing
+• Chest pain with coughing
+• Symptoms worsen after 10 days
+
+**Prevention:**
+• Hand hygiene
+• Avoid close contact with sick people
+• Stay up to date with vaccinations
+• Boost immunity with healthy lifestyle
+
+**Medical Disclaimer:** Persistent respiratory symptoms require professional medical evaluation.`
+        };
+        
+        // Check server connection
+        async function checkConnection() {
+            const statusDiv = document.getElementById('connectionStatus');
+            
+            for (let url of serverUrls) {
+                try {
+                    const response = await fetch(url + '/test-ai', { 
+                        method: 'GET',
+                        timeout: 3000 
+                    });
+                    if (response.ok) {
+                        serverUrl = url;
+                        isOnline = true;
+                        statusDiv.innerHTML = '<i class="fas fa-wifi"></i> Online - Connected to HealthShip AI';
+                        statusDiv.className = 'status online';
+                        return;
+                    }
+                } catch (error) {
+                    console.log(`Failed to connect to ${url}`);
+                }
+            }
+            
+            // All connections failed
+            isOnline = false;
+            statusDiv.innerHTML = '<i class="fas fa-wifi-slash"></i> Offline Mode - Basic medical guidance available';
+            statusDiv.className = 'status offline';
+        }
+        
+        function askQuestion(question) {
+            document.getElementById('chatInput').value = question;
+            sendMessage();
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById("chatInput");
+            const messagesDiv = document.getElementById("chatMessages");
+            const typingIndicator = document.getElementById("typingIndicator");
+            const userMessage = input.value.trim();
+            
+            if (!userMessage) return;
+
+            // Display user message
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.className = 'message user-message';
+            userMessageDiv.innerHTML = `
+                <div class="message-bubble user-bubble">
+                    ${userMessage}
+                </div>
+            `;
+            messagesDiv.appendChild(userMessageDiv);
+            input.value = "";
+
+            // Show typing indicator
+            typingIndicator.style.display = 'block';
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            let response = '';
+            
+            if (isOnline) {
+                try {
+                    // Try online response
+                    const apiResponse = await fetch(serverUrl + "/chat", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ 
+                            question: userMessage,
+                            session_id: sessionId
+                        })
+                    });
+                    const data = await apiResponse.json();
+                    response = data.answer;
+                } catch (error) {
+                    console.log('Online request failed, using offline mode');
+                    isOnline = false;
+                    await checkConnection();
+                    response = getOfflineResponse(userMessage);
+                }
+            } else {
+                // Use offline response
+                response = getOfflineResponse(userMessage);
+            }
+
+            // Hide typing indicator
+            typingIndicator.style.display = 'none';
+
+            // Display bot response
+            const botMessageDiv = document.createElement('div');
+            botMessageDiv.className = 'message bot-message';
+            botMessageDiv.innerHTML = `
+                <div class="bot-avatar">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="message-bubble bot-bubble">
+                    ${formatBotMessage(response)}
+                </div>
+            `;
+            messagesDiv.appendChild(botMessageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function getOfflineResponse(query) {
+            const queryLower = query.toLowerCase();
+            
+            // Check for specific medical keywords
+            for (let [keyword, response] of Object.entries(offlineResponses)) {
+                if (queryLower.includes(keyword) || 
+                    (keyword === 'stomach' && (queryLower.includes('belly') || queryLower.includes('abdominal') || queryLower.includes('nausea'))) ||
+                    (keyword === 'chest' && queryLower.includes('heart')) ||
+                    (keyword === 'skin' && (queryLower.includes('rash') || queryLower.includes('itch'))) ||
+                    (keyword === 'joint' && (queryLower.includes('arthritis') || queryLower.includes('muscle'))) ||
+                    (keyword === 'cough' && (queryLower.includes('fever') || queryLower.includes('cold')))) {
+                    return response;
+                }
+            }
+            
+            // Default offline response
+            return `**HealthShip AI - Offline Mode**
+
+I'm currently in offline mode but can still help with basic medical guidance. 
+
+**For your health concern:** "${query}"
+
+**General Medical Advice:**
+• **Rest** and avoid strenuous activities
+• **Stay hydrated** with plenty of fluids
+• **Monitor symptoms** and note any changes
+• **Avoid self-medication** without proper guidance
+• **Seek professional care** if symptoms worsen
+
+**When to Seek Immediate Medical Care:**
+• High fever (over 103°F/39.4°C)
+• Difficulty breathing or chest pain
+• Severe pain that doesn't improve
+• Signs of serious infection
+• Any concerning or worsening symptoms
+
+**Emergency:** For life-threatening symptoms, call emergency services immediately.
+
+Try asking about specific symptoms like "headache", "stomach pain", "chest pain", "skin problems", "joint pain", or "cough" for detailed guidance.
+
+**Medical Disclaimer:** This offline guidance is for general information only. Always consult healthcare professionals for proper medical advice.`;
+        }
+        
+        function formatBotMessage(message) {
+            // Convert **text** to bold
+            message = message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Convert line breaks to HTML breaks
+            message = message.replace(/\n/g, '<br>');
+            
+            return message;
+        }
+
+        // Allow Enter key to send message
+        document.getElementById("chatInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+        
+        // Check connection on load and periodically
+        checkConnection();
+        setInterval(checkConnection, 30000); // Check every 30 seconds
+        
+        // Prevent zoom on iOS
+        document.addEventListener('touchstart', function(event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

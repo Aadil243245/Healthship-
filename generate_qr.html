@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthShip AI - QR Code Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3a5f 100%);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+        }
+        h1 {
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        .qr-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+            display: inline-block;
+        }
+        .url-info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
+        .instructions {
+            text-align: left;
+            margin-top: 2rem;
+        }
+        .instructions li {
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 HealthShip AI Mobile Access</h1>
+        
+        <div class="qr-container">
+            <div id="qrcode"></div>
+        </div>
+        
+        <div class="url-info">
+            <h3>Access URLs:</h3>
+            <p><strong>Mobile/Tablet:</strong><br>http://192.168.1.100:8000</p>
+            <p><strong>Computer:</strong><br>http://localhost:8000</p>
+        </div>
+        
+        <div class="instructions">
+            <h3>📲 How to Use:</h3>
+            <ol>
+                <li><strong>Scan QR Code</strong> with your mobile camera</li>
+                <li><strong>Or manually type</strong> the URL in mobile browser</li>
+                <li><strong>Bookmark</strong> for easy future access</li>
+                <li><strong>Add to Home Screen</strong> for app-like experience</li>
+            </ol>
+            
+            <h3>✅ Requirements:</h3>
+            <ul>
+                <li>Mobile device on <strong>same WiFi network</strong></li>
+                <li>HealthShip AI server <strong>running on computer</strong></li>
+                <li>Any modern mobile browser</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script>
+        // Generate QR code for mobile access
+        const canvas = document.createElement('canvas');
+        const qrContainer = document.getElementById('qrcode');
+        
+        QRCode.toCanvas(canvas, 'http://192.168.1.100:8000', {
+            width: 200,
+            margin: 2,
+            color: {
+                dark: '#2c5aa0',
+                light: '#ffffff'
+            }
+        }, function (error) {
+            if (error) {
+                qrContainer.innerHTML = '<p>QR Code generation failed</p>';
+            } else {
+                qrContainer.appendChild(canvas);
+            }
+        });
+    </script>
+</body>
+</html>
